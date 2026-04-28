@@ -1,0 +1,79 @@
+{
+  "entities": {
+    "Job": {
+      "title": "Job Notification",
+      "description": "Details about a government job notification",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "organization": { "type": "string" },
+        "eligibility": { "type": "string" },
+        "lastDate": { "type": "string", "format": "date" },
+        "applyLink": { "type": "string" },
+        "details": { "type": "string" },
+        "category": { "type": "string", "enum": ["latest", "admit_card", "results", "answer_key"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "organization", "category", "lastDate"]
+    },
+    "User": {
+      "title": "User Profile",
+      "description": "User profile and statistics",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email"]
+    },
+    "QuizResult": {
+      "title": "Quiz Result",
+      "description": "Result of a completed quiz",
+      "type": "object",
+      "properties": {
+        "subject": { "type": "string" },
+        "level": { "type": "integer" },
+        "score": { "type": "integer" },
+        "totalQuestions": { "type": "integer" },
+        "correct": { "type": "integer" },
+        "wrong": { "type": "integer" },
+        "performance": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["subject", "level", "score"]
+    },
+    "Book": {
+      "title": "Book",
+      "description": "Competitive exam book available in the store",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string", "enum": ["SSC", "UPSC", "Banking", "रेलवे"] },
+        "image": { "type": "string" },
+        "buyLink": { "type": "string" }
+      },
+      "required": ["title", "price", "category"]
+    }
+  },
+  "firestore": {
+    "/jobs/{jobId}": {
+      "schema": "Job",
+      "description": "Collection of job notifications"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/users/{userId}/quizResults/{resultId}": {
+      "schema": "QuizResult",
+      "description": "History of user quiz results"
+    },
+    "/books/{bookId}": {
+      "schema": "Book",
+      "description": "Collection of books for the bookstore"
+    }
+  }
+}

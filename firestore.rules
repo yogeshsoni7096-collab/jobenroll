@@ -1,0 +1,82 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 0.1 Global Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation Helpers
+    function isValidQuizResult(data) {
+      return data.keys().hasAll(['subject', 'level', 'score', 'totalQuestions', 'performance', 'createdAt']) &&
+             data.subject is string && data.subject.size() <= 100 &&
+             data.level is int &&
+             data.score is int &&
+             data.totalQuestions is int &&
+             data.performance is string &&
+             data.createdAt == request.time;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'yogeshsoni7096@gmail.com';
+    }
+
+    // 1. Jobs: Publicly readable
+    match /jobs/{jobId} {
+      allow get: if isValidId(jobId);
+      allow list: if true;
+      allow write: if isAdmin();
+    }
+
+    // 2. Books: Publicly readable
+    match /books/{bookId} {
+      allow get: if isValidId(bookId);
+      allow list: if true;
+      allow write: if isAdmin();
+    }
+
+    // 2.1 Quiz Subjects: Publicly readable
+    match /quizSubjects/{subjectId} {
+      allow get: if isValidId(subjectId);
+      allow list: if true;
+      allow write: if isAdmin();
+    }
+
+    // 3. User Data
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow create: if isOwner(userId) && isValidId(userId);
+      allow update: if isOwner(userId) && isValidId(userId);
+
+      match /quizResults/{resultId} {
+        // For list operations, resultId doesn't exist yet for filtering, so we skip isValidId.
+        // We ensure the user is the owner of the parent document.
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(resultId);
+        allow create: if isOwner(userId) && isValidId(resultId) && isValidQuizResult(incoming());
+        allow delete, update: if false; // Quiz results should be immutable history
+      }
+    }
+  }
+}
